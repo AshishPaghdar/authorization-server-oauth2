@@ -2,6 +2,7 @@ package com.inexture.sso.config;
 
 import java.util.UUID;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
@@ -19,44 +20,18 @@ import org.springframework.security.oauth2.server.authorization.config.annotatio
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class AuthorizationServerConfig {
 
-//	  @Bean
-//	   @Order(Ordered.HIGHEST_PRECEDENCE)
-//	   public SecurityFilterChain authorizationSecurityFilterChain(HttpSecurity http) throws Exception {
-//	       OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-//
-//	       http
-//	           .exceptionHandling(
-//	               exceptions ->
-//	                   exceptions.authenticationEntryPoint(
-//	                       new LoginUrlAuthenticationEntryPoint("/login")
-//	                   )
-//	           );
-//
-//	       return http.build();
-//	   }
-	
 	@Bean
 	@Order(Ordered.HIGHEST_PRECEDENCE)
 	public SecurityFilterChain webFilterChainForOauth (HttpSecurity httpSecurity) throws Exception {
-		
-		
-		
 		OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(httpSecurity);
 		httpSecurity.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
+		httpSecurity.oauth2ResourceServer((oauth2) -> oauth2.jwt(Customizer.withDefaults()));
 		httpSecurity.exceptionHandling(auth->auth.authenticationEntryPoint(new LoginUrlAuthenticationEntryPoint("/login")));
-		
-//		httpSecurity
-//          .exceptionHandling(
-//              exceptions ->
-//                  exceptions.authenticationEntryPoint(
-//                      new LoginUrlAuthenticationEntryPoint("/login")
-//                  )
-//          );
-		
 		return httpSecurity.build();
 	}
 	
@@ -68,6 +43,8 @@ public class AuthorizationServerConfig {
 				.clientSecret("secret")
 				.scope(OidcScopes.OPENID)
 				.scope(OidcScopes.PROFILE)
+				.scope(OidcScopes.EMAIL)
+				.scope(OidcScopes.PHONE)
 //				.redirectUri("http://localhost:8082/login/oauth2/code/inexture")
 				.redirectUri("http://testwebsite.com:8082/login/oauth2/code/inexture")
 				.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
@@ -78,33 +55,14 @@ public class AuthorizationServerConfig {
 				    grantType.add(AuthorizationGrantType.REFRESH_TOKEN);
 				    grantType.add(AuthorizationGrantType.CLIENT_CREDENTIALS);
 				})
-//				.clientSettings(ClientSettings.builder().requireProofKey(true).build())
 				.build();
 		return new InMemoryRegisteredClientRepository(registerClient);
 		
 	}
-	
-	
-//	 @Bean
-//	   public RegisteredClientRepository registeredClientRepository() {
-//	       RegisteredClient demoClient = RegisteredClient.withId(UUID.randomUUID().toString())
-//	           .clientName("inexture_SSO")
-//	           .clientId("inexture")
-//			    .clientSecret("secret")
-//			    .scope("openid")
-//	           .redirectUri("http://localhost:8082/login/oauth2/code/inexture")
-//	           .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-//	           .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-//	           .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-//	           .build();
-//
-//	       return new InMemoryRegisteredClientRepository(demoClient);
-//	   }
-	
-	
+
 	@Bean
 	public AuthorizationServerSettings authorizationServerSettings() {
 		return AuthorizationServerSettings.builder().build();
 	}
-	
+
 }

@@ -4,14 +4,21 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import com.inexture.sso.entity.User;
+import com.inexture.sso.repo.UserRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.oauth2.core.OAuth2Token;
+import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
@@ -31,6 +38,8 @@ import com.nimbusds.jose.proc.SecurityContext;
 
 @Configuration
 public class TokenGenerationConfig {
+	@Autowired
+	private UserRepository userRepository;
 
 	@Bean
 	public JWKSource<SecurityContext> jwkSource() throws NoSuchAlgorithmException{
@@ -82,7 +91,23 @@ public class TokenGenerationConfig {
 	                   .map(GrantedAuthority::getAuthority)
 	                   .collect(Collectors.toSet())
 	           );
+		   context.getClaims().claim("email","kadivalirshad16@gmail.com");
+		   Map<String,Object> userInfo = this.generateClaims(
+				   context.getPrincipal().getName());
+		   context.getClaims().claims(claims ->
+				   claims.putAll(userInfo));
 	   };
 	}
+
+	private Map<String,Object> generateClaims(String name) {
+		User user = userRepository.findByUsername(name);
+		Map<String,Object> listOfUser=new HashMap<>();
+		listOfUser.put("email",user.getUsername()+"@gmail.com");
+		listOfUser.put("mobile_number",user.getPhone_number());
+		listOfUser.put("FullName",user.getFirstName()+" "+user.getLastName());
+		return listOfUser;
+	}
+
+
 	
 }

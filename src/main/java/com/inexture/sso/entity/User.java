@@ -45,6 +45,7 @@ public class User {
   @Column(name = "locale") private String locale;
   @Column(name = "avatarUrl") private String avatarUrl;
   @Column(name = "ACTIVE") private boolean active;
+  @Column(name = "PHONE_NUMBER") private String phone_number;
 
   @CreationTimestamp
   protected LocalDateTime createdAt;
